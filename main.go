@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"path/filepath"
+    "log"
 
 	"github.com/gin-gonic/gin"
 
@@ -48,10 +49,13 @@ func main(){
 
 }
 type proximity struct{
-    Longitude string `json:"longitude"`
-    Latitude string `json:"latitude"`
+    Longitude float64 `json:"longitude"`
+    Latitude float64 `json:"latitude"`
     Radius float64 `json:"radius"`
     Type string `json:"type"`
+}
+type spot struct{
+    
 }
 
 func locationProximityRoute(c *gin.Context ){
@@ -73,8 +77,28 @@ func locationProximityRoute(c *gin.Context ){
  
 }
 
+
 func circleController(){
-        
+    sqlQuery := `
+    SELECT * from "MY_TABLE"
+    LIMIT 10;
+    `
+    rows,err := db.Query(sqlQuery);
+ 
+    if err !=nil{
+        log.Fatal(err);
+    }
+    defer rows.Close();
+    println(rows);
+    for rows.Next(){
+        var rating sql.NullFloat64;
+        var id,website,description,coordinates,name sql.NullString;
+
+        if err := rows.Scan(&id,&name,&website,&coordinates,&description,&rating);err !=nil{
+            log.Fatal(err);
+        }
+        fmt.Println(id.String,name.String,website.String,coordinates.String,description.String,rating.Float64);
+    }
 }
 
 func squareController(){
