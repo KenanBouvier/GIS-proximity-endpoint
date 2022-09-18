@@ -34,9 +34,11 @@ To make our square handler more efficient, we can assume a circle from the squar
 Therefore our new circle will have radius of the furthest distance from the center any border of the square. This is the corner of the square.
 This is also sqrt(2)*halfLengthOfSquare which in our case = the inputted radius parameter.
 
+![image circleSquare](./images/circleSquare.png)
+
 Given the nature of this specific endpoint, the majority of our spots in our db will not fall within the supplied radius. Therefore an overwhelming number of operations will be dealt with using this outer circle and by consequence, increase efficiency. 
 
-One extra thing I included was that if the data was within our larger circle(squarehandler) then we can also skip our squarehandler operations if the smaller circle within the square contained our spot. This way we can instantly know. This leaves an even smaller area of locations that will result in our slower square handling.
+One extra thing I included was that if the data was within our larger circle(squarehandler) then we can also skip our squarehandler operations if the smaller circle within the square contained our spot. This way we can instantly know. This leaves an even smaller area of locations that will rely on the square handler.
 
 
 # Performance
