@@ -1,15 +1,13 @@
-# Task 2 Comments
+# Task 2 Details
 
 
-# Control flow
-
-## Routing
+# Routing
 There is one /proximity route that takes in the expected parameters.
 Then the ProximityController handles both cases of circle and square.
 For Circle: Get distance between both points. As center position to boundary/radius is always constant
 For Square: Create box boundary from center position with radius to determine intersection with each spot location
 
-## Circle & Square Handlers 
+# Circle & Square Handlers 
 Overview of handler operations:
     For Circle: Get distance between both points. As center position to boundary/radius is always constant
     For Square: Create box boundary from center position with radius to determine intersection with each spot location
@@ -27,15 +25,17 @@ Given the nature of this specific endpoint, the majority of our spots in our db 
 One extra thing I included was that if the data was within our larger circle(squarehandler) then we can also skip our squarehandler operations if the smaller circle within the square contained our spot. This way we can instantly know. This leaves an even smaller area of locations that will result in our slower square handling.
 
 
-## Performance
-Time to complete request - (BEFORE EFFICIENT ALGORITHM EXPLAINED ABOVE)
-![image Inefficient - First 5 requests of circle, Next 5 requests of square](./images/inefficientAlgorithm.png)
+# Performance
+##Time to complete request - (Before Efficient Algorithm)
+### First 5 requests for circle, Next 5 requests for square
+![image Inefficient](./images/inefficientAlgorithm.png)
 
-Time to complete request - (WITH EFFICIENT ALGORITHM)
-![image Efficient - All 5 requests of square](./images/efficientAlgorithm.png)
+## Time to complete request - (With Efficient Algorithm)
+### All 5 requests for square
+![image Efficient](./images/efficientAlgorithm.png)
 
 
-### [SORTING LOGIC] 
+# [SORTING LOGIC] 
 To manage the final returned object of this request, initially we are going to have two objects: within50 and outside50.
 They represent spots that are within and outside 50 metres from our supplied point respectively (considering radius param).
 
