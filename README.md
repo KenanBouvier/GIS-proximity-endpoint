@@ -1,5 +1,18 @@
 # Task 2 Details
 
+Endpoint using Curl:
+`
+
+curl --location --request GET 'http://localhost:8080/proximity' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "longitude":-1.5246603,
+    "latitude":53.3685,
+    "radius":500,
+    "type":"circle"
+}'
+
+`
 
 # Routing
 There is one /proximity route that takes in the expected parameters.

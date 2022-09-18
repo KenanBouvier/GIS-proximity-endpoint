@@ -18,7 +18,7 @@ const (
     port     = 5432
     user     = "postgres"
     password = "password"
-    dbname   = "postgres"
+    dbname   = "spotlas"
 )
 
 var psqlInfo = fmt.Sprintf("host=%s port=%d user=%s "+
@@ -32,7 +32,7 @@ var db, err = sql.Open("postgres", psqlInfo);
 func main(){
 
     // Send true/false for spots.sql and postgis setup yes/no respectively
-    dataSetup(false);
+    dataSetup(true);
 
 
     /*  __________________TASK 2 | Endpoint________________________*/
@@ -134,7 +134,7 @@ func proximityController(suppliedParams proximity, c *gin.Context){
         }
     }
     // Now we have completed our checks through all the spots and assigned in correct objects
-    // we must now do the sorts mentioned 
+    // we must now do the sorts mentioned in readme 
 
     sort.Slice(outside50,func(i,j int)bool{
         return outside50[i].Distance < outside50[j].Distance;
@@ -166,7 +166,7 @@ func proximityController(suppliedParams proximity, c *gin.Context){
 func dataSetup(setup bool){
     /*________________ DATA SETUP ________________ */
     if !setup{return}
-    path := filepath.Join("./Queries/spots.sql");
+    path := filepath.Join("./Queries-Task1/spots.sql");
     data, _ := ioutil.ReadFile(path)
     sql := string(data)
     db.Exec(sql);
