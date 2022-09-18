@@ -26,7 +26,7 @@ One extra thing I included was that if the data was within our larger circle(squ
 
 
 # Performance
-##Time to complete request - (Before Efficient Algorithm)
+## Time to complete request - (Before Efficient Algorithm)
 ### First 5 requests for circle, Next 5 requests for square
 ![image Inefficient](./images/inefficientAlgorithm.png)
 
