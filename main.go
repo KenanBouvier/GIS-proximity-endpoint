@@ -31,7 +31,7 @@ var db, err = sql.Open("postgres", psqlInfo);
 
 func main(){
 
-    // Send true/false for spots.sql and postgis setup yes/no respectively
+    // Set true/false for spots.sql and postgis setup yes/no respectively
     dataSetup(true);
 
 

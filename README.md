@@ -1,5 +1,11 @@
 # Task 2 Details
 
+Task 1: [Part 1-4 all solutions in Queries-Task1 Folder]
+
+Task 2: [Go files]
+
+# Setup
+
 Set DB config in main.go
 
 Build and run: 
@@ -52,7 +58,7 @@ One extra thing I included was that if the data was within our larger circle(squ
 
 We can see that the inefficiences involved with square lookups have now become non-existent
 
-# [SORTING LOGIC] 
+## Data management & Sorting Control Flow
 To manage the final returned object of this request, initially we are going to have two objects: within50 and outside50.
 They represent spots that are within and outside 50 metres from our supplied point respectively (considering radius param).
 
