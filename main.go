@@ -1,18 +1,17 @@
 package main
 
 import (
-	"database/sql"
-	"fmt"
-	"io/ioutil"
-	"log"
-	"net/http"
-	"path/filepath"
-	"sort"
+    "database/sql"
+    "fmt"
+    "io/ioutil"
+    "log"
+    "net/http"
+    "path/filepath"
+    "sort"
 
-	"github.com/gin-gonic/gin"
-	_ "github.com/omniscale/imposm3/geom/geos"
+    "github.com/gin-gonic/gin"
 
-	_ "github.com/lib/pq"
+     _ "github.com/lib/pq"
 )
 
 /*_________________ DB setup start ______________________ */
@@ -75,18 +74,18 @@ type spotDistance struct{
 }
 
 func proximityRoute(c *gin.Context ){
-   var suppliedParams proximity; 
+    var suppliedParams proximity; 
 
     // Storing input params from body to access throughout our program
-   if err := c.BindJSON(&suppliedParams);err!=nil{
-       c.IndentedJSON(http.StatusNotFound,gin.H{"error":"Error with args. Set: longitude, latitude, radius, type"})
-       return; 
-   }
-   if suppliedParams.Type != "circle" && suppliedParams.Type != "square"{
+    if err := c.BindJSON(&suppliedParams);err!=nil{
+        c.IndentedJSON(http.StatusNotFound,gin.H{"error":"Error with args. Set: longitude, latitude, radius, type"})
+        return; 
+    }
+    if suppliedParams.Type != "circle" && suppliedParams.Type != "square"{
         c.IndentedJSON(http.StatusNotFound,gin.H{"error":"Not a valid type. circle or square"})
         return;
-   }
-   proximityController(suppliedParams,c);
+    }
+    proximityController(suppliedParams,c);
 }
 
 func proximityController(suppliedParams proximity, c *gin.Context){
@@ -96,7 +95,7 @@ func proximityController(suppliedParams proximity, c *gin.Context){
     ;
     `
     rows,err := db.Query(sqlQuery);
- 
+
     if err !=nil{
         log.Fatal(err);
     }
@@ -106,22 +105,22 @@ func proximityController(suppliedParams proximity, c *gin.Context){
     suppliedPoint := fmt.Sprintf("POINT(%f %f)",suppliedParams.Longitude,suppliedParams.Latitude);
 
     /*  Control flow Management 
-    
+
 
     [SORTING LOGIC] 
     To manage the final returned object of this request, initially we are going to have two objects: within50 and outside50.
     They represent spots that are within and outside 50 metres from our supplied point respectively (considering radius param).
 
     Sorting each of these objects as such:
-        within50 -> sorted by rating
-        outside50 -> sorted by distance
-    To do the sort by distance, as is not a field in our data, I have created an array of spots with this added field. 
+    within50 -> sorted by rating
+    outside50 -> sorted by distance
+    To do the sort by distance, as distance is not a field in our data, I have created an array of type spotDistance with this added field. 
     That way I am able to sort with ease before finally iterating through and removing that field. 
 
     Once we have both of these sorted we can now append them together as so:
 
     finalResult = append(within50,outside50...);
-    This will get us the final form we want to finally return
+    This will get us the final form we want to finally return through json
     */
 
     var outside50 []spotDistance;
@@ -141,62 +140,39 @@ func proximityController(suppliedParams proximity, c *gin.Context){
         spotInstance.Name=name.String;
         spotInstance.Website = website.String;
         spotInstance.Rating=rating.Float64;
-        
+
         /* We must manage both circle and square boundaries. 
-            For Circle: Get distance between both points;
-            For Square: Use envelope 
+        For Circle: Get distance between both points;
+        For Square: Use envelope 
         */
 
         // Arguments to this query will be the two different points: the supplied input location and the current row location
-        if suppliedParams.Type=="circle"{
-            getDistanceQuery := fmt.Sprintf(`SELECT ST_Distance(
-                '%s'::geography,
-                '%s'::geography
-            );`,coordinates.String,suppliedPoint);
+        getDistanceQuery := fmt.Sprintf(`SELECT ST_Distance(
+            '%s'::geography,
+            '%s'::geography
+        );`,coordinates.String,suppliedPoint);
 
-            // fmt.Println(getDistanceQuery);
+        // fmt.Println(getDistanceQuery);
 
-            distanceResult,disterr := db.Query(getDistanceQuery);
-            if disterr !=nil{
-                log.Fatal(err);
+        distanceResult,disterr := db.Query(getDistanceQuery);
+        if disterr !=nil{
+            log.Fatal(err);
+        }
+        defer distanceResult.Close(); 
+        for distanceResult.Next(){
+            var dist float64;
+            distanceResult.Scan(&dist);
+
+            if suppliedParams.Type=="circle"{
+                CircleHandler(&inside50,&outside50,dist,rating,suppliedParams,id,coordinates,name,website);
+            }else{
+                SquareHandler(&inside50,&outside50,suppliedParams,suppliedPoint,dist,rating,id,coordinates,name,website);
             }
-            defer distanceResult.Close(); 
-            for distanceResult.Next(){
-                var dist float64;
-                distanceResult.Scan(&dist);
-
-                // inside50 and also within supplied radius
-                if dist<=50 && dist<=suppliedParams.Radius {
-                    fmt.Println("within range");
-                    var spotInstance spot;
-                    spotInstance.Id = id.String;
-                    spotInstance.Coordinates = coordinates.String;
-                    spotInstance.Name=name.String;
-                    spotInstance.Website = website.String;
-                    spotInstance.Rating=rating.Float64;
-
-                    inside50 = append(inside50,spotInstance);
-                }else if dist<=suppliedParams.Radius { // outside50
-                    var spotInstance spotDistance;
-                    spotInstance.Id = id.String;
-                    spotInstance.Coordinates = coordinates.String;
-                    spotInstance.Name=name.String;
-                    spotInstance.Website = website.String;
-                    spotInstance.Rating=rating.Float64;
-                    spotInstance.Distance=dist;
-
-                    outside50 = append(outside50,spotInstance);
-                }else{
-                    // we don't consider the spot as it is outside our radius
-                }
-            }
-        }else{ //considered not "circle" and not "square" in proximityRoute so no need to worry about bad input
-        
         }
     }
     // Now we have completed our checks through all the spots and assigned in correct objects
-    // we must now do the sorts I mentioned 
-    
+    // we must now do the sorts mentioned 
+
     sort.Slice(outside50,func(i,j int)bool{
         return outside50[i].Distance < outside50[j].Distance;
     }) 
@@ -204,7 +180,7 @@ func proximityController(suppliedParams proximity, c *gin.Context){
         return inside50[i].Rating > inside50[j].Rating;
     })
     var outside50Filtered []spot;
-    
+
     for _,singleSpot := range outside50{ // here we are reforming our outside50 but 
         var filteredSpot spot;
         filteredSpot.Id = singleSpot.Id;
@@ -230,28 +206,28 @@ func task1(){
     /*  __________________ Part 1 | Query ________________________
 
     /* Q: Change the website field so that it only contains the domain*/
-    
+
     /* Essentially, we are applying a regex pattern that is matching the domain of a given url and updating the field with this match*/
     websiteFieldToDomainQuery := `
-        UPDATE "MY_TABLE"
-        SET website = substring(website from '(?:.*://)?(?:www\.)?([^/?]*)')
+    UPDATE "MY_TABLE"
+    SET website = substring(website from '(?:.*://)?(?:www\.)?([^/?]*)')
     `;
     executeSQL(websiteFieldToDomainQuery);
     /* Essentially, we are applying a regex pattern that is matching the domain of a given url and updating the field with this match*/
 
-    
+
 
     /*  __________________Part 2 | Query________________________ */
 
     /* Q: Count how many spots contain the same domain */
-    
+
     /* Grouping by website to find the count and getting the total count of those occurences */
     multipleSpotsCountQuery :=`
-        select COUNT(*) OVER () AS TotalRecordCount
-        from "MY_TABLE"
-        group by website
-        having count(website)>1
-        limit 1;
+    select COUNT(*) OVER () AS TotalRecordCount
+    from "MY_TABLE"
+    group by website
+    having count(website)>1
+    limit 1;
     `;
     executeSQL(multipleSpotsCountQuery); 
 
@@ -260,33 +236,33 @@ func task1(){
     /*  __________________Part 3 | Query________________________ */
 
     /* Q: Return spots which have a domain with a count greater than 1 */
-    
+
     /* As we want the full record of spots, we select all from those that when grouped by website count is greater than 1  */
     spotsWithMultipleCountQuery :=`
     SELECT * FROM "MY_TABLE"
     WHERE website IN (SELECT website
-        FROM "MY_TABLE"
-        GROUP BY website
-        HAVING COUNT(website) > 1 
-    );
-    `;
-    executeSQL(spotsWithMultipleCountQuery); 
+    FROM "MY_TABLE"
+    GROUP BY website
+    HAVING COUNT(website) > 1 
+);
+`;
+executeSQL(spotsWithMultipleCountQuery); 
 
 
 
-    /*  __________________Part 4 | Query________________________ */
+/*  __________________Part 4 | Query________________________ */
 
-    /* Q: Make a PL/SQL function for point 1. */
-    
-    // spotsWithMultipleCountQuery :=`
-    // SELECT * FROM "MY_TABLE"
-    // WHERE website IN (SELECT website
-    //     FROM "MY_TABLE"
-    //     GROUP BY website
-    //     HAVING COUNT(website) > 1 
-    // );      
-    // `;
-    // executeSQL(spotsWithMultipleCountQuery); 
+/* Q: Make a PL/SQL function for point 1. */
+
+// spotsWithMultipleCountQuery :=`
+// SELECT * FROM "MY_TABLE"
+// WHERE website IN (SELECT website
+//     FROM "MY_TABLE"
+//     GROUP BY website
+//     HAVING COUNT(website) > 1 
+// );      
+// `;
+// executeSQL(spotsWithMultipleCountQuery); 
 
 }
 func dataSetup(setup bool){
@@ -298,15 +274,15 @@ func dataSetup(setup bool){
         sql := string(data)
         _, error := db.Exec(sql);
         if error != nil {fmt.Println("Error executing sql: ",error)
-        }else{
-            fmt.Println("Successfully inserted!")
-        }
+    }else{
+        fmt.Println("Successfully inserted!")
     }
+}
 }
 
 func executeSQL(sqlStatement string){
     _,error := db.Exec(sqlStatement);
-    
+
     if error != nil{
         fmt.Println("Error executing sql query: ",error);
     }else{
