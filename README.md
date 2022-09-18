@@ -1,7 +1,14 @@
 # Task 2 Details
 
-Endpoint using Curl:
-`
+Set DB config in main.go
+
+Build and run: 
+```go
+go run *.go
+```
+
+Send request to endpoint using Curl:
+```bash
 
 curl --location --request GET 'http://localhost:8080/proximity' \
 --header 'Content-Type: application/json' \
@@ -12,10 +19,10 @@ curl --location --request GET 'http://localhost:8080/proximity' \
     "type":"circle"
 }'
 
-`
+```
 
 # Routing
-There is one /proximity route that takes in the expected parameters.
+There is a /proximity route that takes in the expected parameters.
 Then the ProximityController handles both cases of circle and square.
 For Circle: Get distance between both points. As center position to boundary/radius is always constant
 For Square: Create box boundary from center position with radius to determine intersection with each spot location
