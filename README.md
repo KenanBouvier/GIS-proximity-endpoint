@@ -28,7 +28,7 @@ Overview of handler operations:
 
 The time complexity for circle handler is constant.
 Although the time complexity for the square handler is also constant, it has a very noticable factor of about 4x slower.
-The inherent difficulty with squares instead of circles is that the valid area is different depending on the angle we are directing towards. Unlike a circle in which at every angle the valid distance is constant.
+The inherent slower computation with squares instead of circles is that the valid area is different depending on the angle we are directing towards. Unlike a circle in which at every angle the valid distance is constant.
 
 To make our square handler more efficient, we can assume a circle from the square. A circle that contains the whole square. Else we are removing valid areas that should be considered.
 Therefore our new circle will have radius of the furthest distance from the center any border of the square. This is the corner of the square.
