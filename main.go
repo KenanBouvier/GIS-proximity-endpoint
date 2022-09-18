@@ -9,6 +9,7 @@ import (
     "log"
 
 	"github.com/gin-gonic/gin"
+    "github.com/omniscale/imposm3/geom/geos"
 
 	_ "github.com/lib/pq"
 )
@@ -32,7 +33,7 @@ var db, err = sql.Open("postgres", psqlInfo);
 
 func main(){
 
-    // Send true or false for spots.sql execution or to skip respectively
+    // Send true/false for spots.sql execution yes/no respectively
     dataSetup(false);
 
     /*  __________________TASK 1 | Query________________________*/
@@ -44,10 +45,9 @@ func main(){
 
     router:=gin.Default(); 
     router.GET("/proximity",locationProximityRoute);
-
     router.Run("localhost:8080");
-
 }
+
 type proximity struct{
     Longitude float64 `json:"longitude"`
     Latitude float64 `json:"latitude"`
@@ -77,10 +77,10 @@ func locationProximityRoute(c *gin.Context ){
  
 }
 
-
 func circleController(){
+    // here we query all rows but the coordinates must be in WKT format to process.
     sqlQuery := `
-    SELECT * from "MY_TABLE"
+    SELECT id,website,description,ST_AsText(coordinates),name,rating from "MY_TABLE"
     LIMIT 10;
     `
     rows,err := db.Query(sqlQuery);
@@ -94,10 +94,18 @@ func circleController(){
         var rating sql.NullFloat64;
         var id,website,description,coordinates,name sql.NullString;
 
-        if err := rows.Scan(&id,&name,&website,&coordinates,&description,&rating);err !=nil{
+        if err := rows.Scan(&id,&name,&website,&coordinates,&description,&rating);err != nil{
             log.Fatal(err);
         }
         fmt.Println(id.String,name.String,website.String,coordinates.String,description.String,rating.Float64);
+
+        g := geos.NewGeos();
+
+        geom := g.FromWkt(coordinates.String);
+        if geom == nil{
+            log.Fatal("Error reading wkt");
+        }
+        fmt.Println(geom.Area());
     }
 }
 
@@ -109,22 +117,25 @@ func task1(){
 
     /*  __________________ Part 1 | Query ________________________
 
-    /* Change the website field so that it only contains the domain*/
+    /* Q: Change the website field so that it only contains the domain*/
     
+    /* Essentially, we are applying a regex pattern that is matching the domain of a given url and updating the field with this match*/
     websiteFieldToDomainQuery := `
         UPDATE "MY_TABLE"
         SET website = substring(website from '(?:.*://)?(?:www\.)?([^/?]*)')
     `;
     executeSQL(websiteFieldToDomainQuery);
-    /* Essentially we are applying a regex pattern that is matching the domain of a given url */
+    /* Essentially, we are applying a regex pattern that is matching the domain of a given url and updating the field with this match*/
 
     
+
     /*  __________________Part 2 | Query________________________ */
 
-    /* Count how many spots contain the same domain */
+    /* Q: Count how many spots contain the same domain */
     
+    /* Grouping by website to find the count and getting the total count of those occurences */
     multipleSpotsCountQuery :=`
-        select COUNT(*) OVER () AS TotalRecords
+        select COUNT(*) OVER () AS TotalRecordCount
         from "MY_TABLE"
         group by website
         having count(website)>1
@@ -133,10 +144,12 @@ func task1(){
     executeSQL(multipleSpotsCountQuery); 
 
 
-    /*  __________________TASK 1 | Query________________________ */
 
-    /* Part 3) Return spots which have a domain with a count greater than 1 */
+    /*  __________________Part 3 | Query________________________ */
+
+    /* Q: Return spots which have a domain with a count greater than 1 */
     
+    /* As we want the full record of spots, we select all from those that when grouped by website count is greater than 1  */
     spotsWithMultipleCountQuery :=`
     SELECT * FROM "MY_TABLE"
     WHERE website IN (SELECT website
@@ -149,9 +162,9 @@ func task1(){
 
 
 
-    /*  __________________TASK 1 | Query________________________ */
+    /*  __________________Part 4 | Query________________________ */
 
-            /* Part 4) Make a PL/SQL function for point 1. */
+    /* Q: Make a PL/SQL function for point 1. */
     
     // spotsWithMultipleCountQuery :=`
     // SELECT * FROM "MY_TABLE"
@@ -188,13 +201,8 @@ func executeSQL(sqlStatement string){
     _,error := db.Exec(sqlStatement);
     
     if error != nil{
-        fmt.Println("Error executing sql Statement: ",error);
+        fmt.Println("Error executing sql query: ",error);
     }else{
-        fmt.Println("Successfully Executed!");
+        fmt.Println("Successful SQL query execution!");
     }
 }
-
-
-
-
-
