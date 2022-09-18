@@ -45,7 +45,7 @@ func main(){
     /*  __________________TASK 2 | Endpoint________________________*/
 
     router:=gin.Default(); 
-    router.GET("/proximity",proximityRoute);
+    router.GET("/proximity",locationProximityRoute);
     router.Run("localhost:8080");
 }
 
@@ -74,7 +74,7 @@ type spotDistance struct{
     Distance float64 `json:"distance"'`
 }
 
-func proximityRoute(c *gin.Context ){
+func locationProximityRoute(c *gin.Context ){
    var suppliedParams proximity; 
 
     // Storing input params from body to access throughout our program
@@ -106,21 +106,16 @@ func proximityController(suppliedParams proximity, c *gin.Context){
     suppliedPoint := fmt.Sprintf("POINT(%f %f)",suppliedParams.Longitude,suppliedParams.Latitude);
 
     /*  Control flow Management 
-    
-
-    [SORTING LOGIC] 
-    To manage the final returned object of this request, initially we are going to have two objects: within50 and outside50.
-    They represent spots that are within and outside 50 metres from our supplied point respectively (considering radius param).
+    To manage the final returned object of this request, we are going to have two objects: 
+       within50 and outside50 representing spots that are within and outside 50 metres respectively.
 
     Sorting each of these objects as such:
         within50 -> sorted by rating
         outside50 -> sorted by distance
-    To do the sort by distance, as is not a field in our data, I have created an array of spots with this added field. 
-    That way I am able to sort with ease before finally iterating through and removing that field. 
 
     Once we have both of these sorted we can now append them together as so:
 
-    finalResult = append(within50,outside50...);
+    finalResult = append(within50,outside50);
     This will get us the final form we want to finally return
     */
 
@@ -144,7 +139,7 @@ func proximityController(suppliedParams proximity, c *gin.Context){
         
         /* We must manage both circle and square boundaries. 
             For Circle: Get distance between both points;
-            For Square: Use envelope 
+            For Square:
         */
 
         // Arguments to this query will be the two different points: the supplied input location and the current row location
@@ -166,7 +161,7 @@ func proximityController(suppliedParams proximity, c *gin.Context){
                 distanceResult.Scan(&dist);
 
                 // inside50 and also within supplied radius
-                if dist<=50 && dist<=suppliedParams.Radius {
+                if dist<=500 && dist<=suppliedParams.Radius {
                     fmt.Println("within range");
                     var spotInstance spot;
                     spotInstance.Id = id.String;
@@ -190,8 +185,6 @@ func proximityController(suppliedParams proximity, c *gin.Context){
                     // we don't consider the spot as it is outside our radius
                 }
             }
-        }else{ //considered not "circle" and not "square" in proximityRoute so no need to worry about bad input
-        
         }
     }
     // Now we have completed our checks through all the spots and assigned in correct objects
@@ -216,12 +209,15 @@ func proximityController(suppliedParams proximity, c *gin.Context){
         outside50Filtered = append(outside50Filtered,filteredSpot);
     }
     // so now we have our properly sorted inside50 and properly sorted outside50
-    // we can then combine in result and send json object
+    // we can then append to our 
 
     var result []spot;
     result = append(inside50,outside50Filtered...);
 
     c.IndentedJSON(http.StatusOK,result);
+    
+    // fmt.Println("FINAL RES: ",result);
+    // fmt.Println("LENGTH: ",len(result));
 }
 
 
