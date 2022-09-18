@@ -21,16 +21,10 @@ curl --location --request GET 'http://localhost:8080/proximity' \
 
 ```
 
-# Routing
-There is a /proximity route that takes in the expected parameters.
-Then the ProximityController handles both cases of circle and square.
-For Circle: Get distance between both points. As center position to boundary/radius is always constant
-For Square: Create box boundary from center position with radius to determine intersection with each spot location
-
 # Circle & Square Handlers 
 Overview of handler operations:
-    For Circle: Get distance between both points. As center position to boundary/radius is always constant
-    For Square: Create box boundary from center position with radius to determine intersection with each spot location
+- For Circle: Get distance between both points. As center position to boundary/radius is always constant
+- For Square: Create box boundary from center position with radius to determine intersection with each spot location
 
 The time complexity for circle handler is constant.
 Although the time complexity for the square handler is also constant, it has a very noticable factor of about 4x slower.
