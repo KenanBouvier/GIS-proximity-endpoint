@@ -64,7 +64,7 @@ type spotDistance struct{
     Name string `json:"name"`
     Website string `json:"website"`
     Rating float64 `json:"rating"`
-    Distance float64 `json:"distance"'`
+    Distance float64 `json:"distance"`
 }
 
 func proximityRoute(c *gin.Context ){
@@ -166,7 +166,7 @@ func proximityController(suppliedParams proximity, c *gin.Context){
 func dataSetup(setup bool){
     /*________________ DATA SETUP ________________ */
     if !setup{return}
-    path := filepath.Join("./Queries-Task1/spots.sql");
+    path := filepath.Join("./Queries/spots.sql");
     data, _ := ioutil.ReadFile(path)
     sql := string(data)
     db.Exec(sql);
