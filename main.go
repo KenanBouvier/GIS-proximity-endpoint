@@ -29,10 +29,13 @@ var db, err = sql.Open("postgres", psqlInfo);
 /*_________________ DB setup end ______________________ */
 
 
+// In meters
+var RangeToSortRating float64 = 100;
+
 func main(){
 
     // Set true/false for spots.sql and postgis setup yes/no respectively
-    dataSetup(true);
+    dataSetup(true);    
 
 
     /*  __________________TASK 2 | Endpoint________________________*/
@@ -94,8 +97,8 @@ func proximityController(suppliedParams proximity, c *gin.Context){
     suppliedPoint := fmt.Sprintf("POINT(%f %f)",suppliedParams.Longitude,suppliedParams.Latitude);
 
 
-    var outside50 []spotDistance;
-    var inside50 []spot;
+    var outside []spotDistance;
+    var inside []spot;
 
     for rows.Next(){
         var rating sql.NullFloat64;
@@ -127,24 +130,24 @@ func proximityController(suppliedParams proximity, c *gin.Context){
             distanceResult.Scan(&dist);
 
             if suppliedParams.Type=="circle"{
-                CircleHandler(&inside50,&outside50,dist,rating,suppliedParams.Radius,id,coordinates,name,website);
+                CircleHandler(&inside,&outside,dist,rating,suppliedParams.Radius,id,coordinates,name,website);
             }else{
-                SquareHandler(&inside50,&outside50,suppliedParams.Radius,suppliedPoint,dist,rating,id,coordinates,name,website);
+                SquareHandler(&inside,&outside,suppliedParams.Radius,suppliedPoint,dist,rating,id,coordinates,name,website);
             }
         }
     }
     // Now we have completed our checks through all the spots and assigned in correct objects
     // we must now do the sorts mentioned in readme 
 
-    sort.Slice(outside50,func(i,j int)bool{
-        return outside50[i].Distance < outside50[j].Distance;
+    sort.Slice(outside,func(i,j int)bool{
+        return outside[i].Distance < outside[j].Distance;
     }) 
-    sort.Slice(inside50,func(i,j int)bool{
-        return inside50[i].Rating > inside50[j].Rating;
+    sort.Slice(inside,func(i,j int)bool{
+        return inside[i].Rating > inside[j].Rating;
     })
-    var outside50Filtered []spot;
+    var outsideFiltered []spot;
 
-    for _,singleSpot := range outside50{ // here we are reforming our outside50 but 
+    for _,singleSpot := range outside{ // here we are reforming our outside50 but 
         var filteredSpot spot;
         filteredSpot.Id = singleSpot.Id;
         filteredSpot.Coordinates = singleSpot.Coordinates;
@@ -152,13 +155,13 @@ func proximityController(suppliedParams proximity, c *gin.Context){
         filteredSpot.Name = singleSpot.Name;
         filteredSpot.Website = singleSpot.Website;
 
-        outside50Filtered = append(outside50Filtered,filteredSpot);
+        outsideFiltered = append(outsideFiltered,filteredSpot);
     }
     // so now we have our properly sorted inside50 and properly sorted outside50
     // we can then combine in result and send json object
 
     var result []spot;
-    result = append(inside50,outside50Filtered...);
+    result = append(inside,outsideFiltered...);
 
     c.IndentedJSON(http.StatusOK,result);
 }

@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func SquareHandler(inside50 *[]spot,outside50 *[]spotDistance, radius float64 ,suppliedPoint string,dist float64,rating sql.NullFloat64, id,coordinates,name,website sql.NullString) {
+func SquareHandler(inside *[]spot,outside *[]spotDistance, radius float64 ,suppliedPoint string,dist float64,rating sql.NullFloat64, id,coordinates,name,website sql.NullString) {
 
     var cornerDistance float64 = math.Sqrt(2)*radius;
 
@@ -109,8 +109,8 @@ func SquareHandler(inside50 *[]spot,outside50 *[]spotDistance, radius float64 ,s
     // Now must be within boundary area
 
 
-    // inside50  
-    if dist<=50{
+    // inside
+    if dist<=RangeToSortRating{
         var spotInstance spot;
         spotInstance.Id = id.String;
         spotInstance.Coordinates = coordinates.String;
@@ -118,7 +118,7 @@ func SquareHandler(inside50 *[]spot,outside50 *[]spotDistance, radius float64 ,s
         spotInstance.Website = website.String;
         spotInstance.Rating=rating.Float64;
 
-        *inside50 = append(*inside50,spotInstance);
+        *inside = append(*inside,spotInstance);
     }else{ // outside50
         var spotInstance spotDistance;
         spotInstance.Id = id.String;
@@ -128,6 +128,6 @@ func SquareHandler(inside50 *[]spot,outside50 *[]spotDistance, radius float64 ,s
         spotInstance.Rating=rating.Float64;
         spotInstance.Distance=dist;
 
-        *outside50 = append(*outside50,spotInstance);
+        *outside = append(*outside,spotInstance);
     }
 }

@@ -7,7 +7,7 @@ import (
 
 // Passing data by reference
 
-func CircleHandler(inside50 *[]spot, outside50 *[]spotDistance , dist float64,rating sql.NullFloat64, radius float64, id,coordinates,name,website sql.NullString) {
+func CircleHandler(inside50 *[]spot, outside *[]spotDistance , dist float64,rating sql.NullFloat64, radius float64, id,coordinates,name,website sql.NullString) {
 
     // we don't consider the spot as it is outside our considering area
     if dist > radius{
@@ -16,7 +16,7 @@ func CircleHandler(inside50 *[]spot, outside50 *[]spotDistance , dist float64,ra
     //Now must be within supplied radius
 
     // within 50 metres
-    if dist<=50 {
+    if dist<=RangeToSortRating {
         var spotInstance spot;
         spotInstance.Id = id.String;
         spotInstance.Coordinates = coordinates.String;
@@ -34,6 +34,6 @@ func CircleHandler(inside50 *[]spot, outside50 *[]spotDistance , dist float64,ra
         spotInstance.Rating=rating.Float64;
         spotInstance.Distance=dist;
 
-        *outside50 = append(*outside50,spotInstance);
+        *outside = append(*outside,spotInstance);
     } 
 }
