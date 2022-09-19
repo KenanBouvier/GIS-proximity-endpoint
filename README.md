@@ -59,7 +59,7 @@ One extra thing I included was that if the data was within our larger circle(squ
 #### All 5 requests for square
 ![image Efficient](./images/efficientAlgorithm.png)
 
-We can see that the inefficiences involved with square lookups have now become non-existent
+We can see that the inefficiences involved with square lookups have now become non-existent and are the same as the circle lookup.
 
 ## Data management & Sorting Control Flow
 To manage the final returned object of this request, initially we are going to have two objects: within50 and outside50.
