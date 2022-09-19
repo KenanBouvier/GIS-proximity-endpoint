@@ -1,19 +1,22 @@
-# Task 2 Details
+# GIS Proximity Endpoint - Golang & PostgreSQL
 
-Task 1: [Part 1-4 all solutions in Queries-Task1 Folder]
+Given a location,radius and search area type, this endpoint will return locations from a PostgreSQL database (can be migrated to other RDBMS) in json format for further management.
 
-Task 2: [Go files]
+This endpoint will return the locations within this radius and area type. Additionally, we can set a parameter representing the distance at which we don't sort by distance but rather by rating.
 
 # Setup
 
 Set DB config in main.go
 
 Build and run: 
-```go
+```bash
+git clone https://github.com/KenanBouvier/spotlas-submission.git
+cd spotlas-submission
 go run *.go
 ```
 
-Send request to endpoint using Curl:
+
+Send test request to endpoint with Curl:
 ```bash
 
 curl --location --request GET 'http://localhost:8080/proximity' \
@@ -27,8 +30,8 @@ curl --location --request GET 'http://localhost:8080/proximity' \
 
 ```
 
-# Circle & Square Handlers 
-Overview of handler operations:
+# Algorithm Overview: Circle & Square Handlers 
+Brief overview of handler operations:
 - For Circle: Get distance between both points. As center position to boundary/radius is always constant
 - For Square: Create box boundary from center position with radius to determine intersection with each spot location
 
@@ -47,13 +50,13 @@ Given the nature of this specific endpoint, the majority of our spots in our db 
 One extra thing I included was that if the data was within our larger circle(squarehandler) then we can also skip our squarehandler operations if the smaller circle within the square contained our spot. This way we can instantly know. This leaves an even smaller area of locations that will rely on the square handler.
 
 
-# Performance
-## Time to complete request - (Before Efficient Algorithm)
-### First 5 requests for circle, Next 5 requests for square
+## Performance
+### Time to complete request - (Before Efficient Algorithm)
+#### First 5 requests for circle last 5 requests for square (~2 seconds)
 ![image Inefficient](./images/inefficientAlgorithm.png)
 
-## Time to complete request - (With Efficient Algorithm)
-### All 5 requests for square
+### Time to complete request - (With Efficient Algorithm)
+#### All 5 requests for square
 ![image Efficient](./images/efficientAlgorithm.png)
 
 We can see that the inefficiences involved with square lookups have now become non-existent
@@ -63,8 +66,8 @@ To manage the final returned object of this request, initially we are going to h
 They represent spots that are within and outside 50 metres from our supplied point respectively (considering radius param).
 
 Sorting each of these objects as such:
-within50 -> sorted by rating
-outside50 -> sorted by distance
+- within50 -> sorted by rating
+- outside50 -> sorted by distance
 To do the sort by distance, as distance is not a field in our data, I have created an array of type spotDistance with this added field. 
 That way I am able to sort with ease before finally iterating through and removing that field. 
 
@@ -72,4 +75,3 @@ Once we have both of these sorted we can now append them together as so:
 
 finalResult = append(within50,outside50...);
 This will get us the final form we want to finally return through json 
-
