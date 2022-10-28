@@ -10,8 +10,8 @@ Set DB config in main.go
 
 Build and run: 
 ```bash
-git clone https://github.com/KenanBouvier/spotlas-submission.git
-cd spotlas-submission
+git clone https://github.com/KenanBouvier/GIS-proximity-endpoint.git
+cd GIS-proximity-endpoint
 go run *.go
 ```
 
